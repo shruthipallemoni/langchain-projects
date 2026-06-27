@@ -1,117 +1,144 @@
-# YouTube Video Q&A
+# YouTube Video Q&A with RAG
 
-A local YouTube Q&A app that indexes video transcripts with a Retrieval-Augmented Generation (RAG) pipeline.
+A modern web application that lets users ask questions about a YouTube video using a Retrieval-Augmented Generation (RAG) pipeline. The app extracts a video transcript, indexes it semantically, and answers questions with the help of a large language model.
 
-## Project Overview
+Live demo: https://langchain-projects-liart.vercel.app/
 
-This repository contains:
-- `backend/` — FastAPI service that:
-  - extracts YouTube transcripts
-  - splits text into semantic chunks
-  - embeds chunks with HuggingFace `all-MiniLM-L6-v2`
-  - stores embeddings in FAISS
-  - answers questions using a Groq-powered LLM over retrieved chunks
-- `frontend/` — React + Vite web UI for:
-  - loading a YouTube video URL
-  - building the backend RAG index
-  - asking questions about the video
-  - displaying streaming answers
+## Overview
 
-## Architecture
+This project consists of two main parts:
 
-1. User pastes a YouTube URL in the frontend.
-2. Frontend posts the URL to `backend/api/load-video`.
-3. Backend fetches the transcript, splits it, builds embeddings, and stores them in FAISS.
-4. Frontend receives a `video_id` and uses it for later questions.
-5. When the user asks a question, the frontend posts `video_id` + `question` to `backend/api/ask`.
-6. Backend retrieves the most relevant transcript chunks and generates an answer with the LLM.
+- Backend: a FastAPI service that extracts YouTube transcripts, splits them into meaningful chunks, creates embeddings, and serves RAG-based answers.
+- Frontend: a React + Vite application that provides a simple interface for entering a YouTube URL, loading the video, and chatting with the AI assistant.
+
+## Features
+
+- Paste a YouTube video URL
+- Extract transcript content automatically
+- Build a semantic vector index for the video
+- Ask questions about the video in natural language
+- Stream AI-generated answers in the chat interface
+- Deployable frontend and backend for production use
+
+## Tech Stack
+
+### Backend
+- Python
+- FastAPI
+- LangChain
+- Hugging Face embeddings
+- FAISS
+- Groq LLM
+- youtube-transcript-api
+
+### Frontend
+- React
+- Vite
+- JavaScript / JSX
+- CSS
+
+## Project Structure
+
+```text
+chat-with-youtube-video/
+├── backend/
+│   ├── main.py
+│   ├── requirements.txt
+│   └── runtime.txt
+└── frontend/
+    ├── src/
+    ├── package.json
+    └── vite.config.js
+```
 
 ## Prerequisites
 
-- Python 3.11+ (recommended)
-- Node.js 18+ / npm
-- Public YouTube videos with captions enabled
+- Python 3.10 or newer
+- Node.js 18+ and npm
+- Access to a public YouTube video with captions enabled
 
 ## Backend Setup
 
-1. Open a terminal in `backend/`.
+1. Navigate to the backend folder:
+
+```bash
+cd backend
+```
+
 2. Create and activate a virtual environment:
 
-   ```bash
-   python -m venv .venv
-   .\.venv\Scripts\Activate.ps1    # PowerShell
-   # or .\.venv\Scripts\activate.bat for cmd
-   ```
+```bash
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
 
-3. Install dependencies:
+3. Install the required Python dependencies:
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+```
 
-4. Configure proxy settings if needed by creating a `.env` file in the project root with:
+4. Create a `.env` file if needed and add environment variables such as:
 
-   ```env
-   PROXY_USER=<username>
-   PROXY_PASS=<password>
-   ```
+```env
+GROQ_API_KEY=your_groq_api_key
+PROXY_USER=your_proxy_username
+PROXY_PASS=your_proxy_password
+```
 
-5. Start the backend:
+5. Start the backend server:
 
-   ```bash
-   uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-   ```
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
 
 ## Frontend Setup
 
-1. Open a terminal in `frontend/`.
+1. Navigate to the frontend folder:
+
+```bash
+cd frontend
+```
+
 2. Install dependencies:
 
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
 3. Start the development server:
 
-   ```bash
-   npm run dev
-   ```
+```bash
+npm run dev
+```
 
 4. Open the app in your browser at:
 
-   ```text
-   http://localhost:5173
-   ```
+```text
+http://localhost:5173
+```
+
+## Deployment
+
+The frontend is currently deployed at:
+
+https://langchain-projects-liart.vercel.app/
+
+The backend is deployed separately and should be configured to communicate with the frontend through the correct API URL.
 
 ## Usage
 
-1. Start the backend and frontend.
-2. Paste a YouTube video URL into the app.
-3. Click `Build Index →`.
-4. Wait for the transcript to be indexed.
-5. Ask questions about the video using the chat interface.
+1. Open the web app.
+2. Paste a YouTube video URL.
+3. Load the video to build its index.
+4. Ask questions about the content and receive AI-generated responses.
 
 ## Notes
 
-- The frontend expects the backend at `http://localhost:8000`.
-- Embedded transcript text is stored in memory by default; the app does not persist the FAISS index across restarts.
-- The first run downloads the `all-MiniLM-L6-v2` model locally (~80MB).
-
-## Folder Structure
-
-- `backend/`
-  - `main.py` — FastAPI app and RAG pipeline.
-  - `requirements.txt` — backend dependencies.
-- `frontend/`
-  - `package.json` — frontend dependencies and scripts.
-  - `src/` — React components and app logic.
-
-## Troubleshooting
-
-- If transcript extraction fails, try a different public YouTube video with captions.
-- If the app cannot connect, verify the backend is running on `http://localhost:8000`.
-- If the frontend shows CORS issues, confirm the backend origin whitelist includes `http://localhost:5173`.
+- Transcript access depends on YouTube availability and caption support.
+- The app uses in-memory storage for the generated vector index during the current session.
+- The first run may download the embedding model locally, which can take some time.
 
 ## License
 
-This project does not include a license file. Add one if you want to share or distribute it.
+This project is currently unlicensed. Add a license file if you want to distribute or reuse it publicly.
