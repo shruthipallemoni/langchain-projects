@@ -41,20 +41,14 @@ import json
 import re
 from typing import AsyncGenerator
 
+import httpx
+
 # ── FastAPI ────────────────────────────────────────────────────────────────────
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-
-# ── YouTube Transcript ─────────────────────────────────────────────────────────
-from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api._errors import (
-    NoTranscriptFound,
-    TranscriptsDisabled,
-    VideoUnavailable,
-)
 
 # ── LangChain: Text Splitting ──────────────────────────────────────────────────
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -134,27 +128,32 @@ def extract_video_id(url: str) -> str | None:
     return None
 
 # ── Updated fetch_transcript function ─────────────────────────────────────────
-def fetch_transcript(video_id: str) -> str:
+async def fetch_transcript(video_id: str) -> str:
     try:
-        ytt = YouTubeTranscriptApi()
-        fetched = ytt.fetch(video_id)           # returns FetchedTranscript object
-        full_text = " ".join(seg.text for seg in fetched)
-        return full_text
-    except NoTranscriptFound:
-        raise HTTPException(
-            status_code=404,
-            detail="No transcript found. Try a video with subtitles enabled."
-        )
-    except TranscriptsDisabled:
-        raise HTTPException(
-            status_code=403,
-            detail="Captions are disabled for this video."
-        )
-    except VideoUnavailable:
-        raise HTTPException(
-            status_code=404,
-            detail="Video is unavailable or private."
-        )
+        api_key = os.environ.get("SUPADATA_API_KEY")
+        if not api_key:
+            raise HTTPException(
+                status_code=500,
+                detail="SUPADATA_API_KEY is not set. Add it to your environment variables."
+            )
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                "https://api.supadata.ai/v1/youtube/transcript",
+                params={"videoId": video_id, "lang": "en"},
+                headers={"x-api-key": api_key},
+            )
+
+            response.raise_for_status()
+            data = response.json()
+
+            if "content" not in data:
+                raise HTTPException(status_code=404, detail="No transcript found.")
+
+            full_text = " ".join(seg["text"] for seg in data["content"] if isinstance(seg, dict) and "text" in seg)
+            return full_text
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Transcript fetch failed: {str(e)}")
     
@@ -215,7 +214,7 @@ async def load_video(request: LoadVideoRequest):
             "cached": True,
         }
 
-    transcript = fetch_transcript(video_id)
+    transcript = await fetch_transcript(video_id)
 
     try:
         vector_store, num_chunks, word_count = build_vector_store(transcript)
