@@ -1,0 +1,23 @@
+# ─── Core Web Framework ───────────────────────────────────────────────────────
+fastapi==0.115.0          # The web framework
+uvicorn[standard]==0.30.0 # ASGI server to run FastAPI
+python-multipart==0.0.9   # Needed by FastAPI to handle form data
+
+# ─── YouTube ──────────────────────────────────────────────────────────────────
+youtube-transcript-api==0.6.3  # Fetches YT captions without OAuth
+
+# ─── RAG Pipeline ─────────────────────────────────────────────────────────────
+langchain==0.3.7               # Core LangChain (chains, splitters, prompts)
+langchain-community==0.3.7     # HuggingFaceEmbeddings, FAISS wrappers
+langchain-groq==0.2.1          # ChatGroq integration (Llama 3.3 70B)
+
+# ─── Embeddings (local, no API cost) ──────────────────────────────────────────
+sentence-transformers==3.2.1   # Powers HuggingFaceEmbeddings (all-MiniLM-L6-v2)
+# Downloads ~80MB model on first run, cached locally after that
+
+# ─── Vector Store ─────────────────────────────────────────────────────────────
+faiss-cpu==1.10.0               # Facebook AI Similarity Search (CPU version)
+# Use faiss-gpu if you have a CUDA GPU (much faster for large datasets)
+
+# ─── Utilities ────────────────────────────────────────────────────────────────
+httpx==0.27.0                  # Async HTTP client (used by langchain-groq)
