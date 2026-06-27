@@ -4,7 +4,7 @@ uvicorn[standard]==0.30.0 # ASGI server to run FastAPI
 python-multipart==0.0.9   # Needed by FastAPI to handle form data
 
 # ─── YouTube ──────────────────────────────────────────────────────────────────
-youtube-transcript-api==0.6.3  # Fetches YT captions without OAuth
+youtube-transcript-api==1.2.4  # Fetches YT captions without OAuth
 
 # ─── RAG Pipeline ─────────────────────────────────────────────────────────────
 langchain==0.3.7               # Core LangChain (chains, splitters, prompts)
