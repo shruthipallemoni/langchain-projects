@@ -88,14 +88,25 @@ app.add_middleware(
 )
 
 
-# ── Embedding Model (loaded once at startup) ───────────────────────────────────
-print("Loading embedding model (first run downloads ~80MB)...")
-embeddings = HuggingFaceEmbeddings(
-    model_name="all-MiniLM-L6-v2",
-    model_kwargs={"device": "cpu"},
-    encode_kwargs={"normalize_embeddings": True},
-)
-print("Embedding model loaded.")
+# ── Embedding Model (loaded lazily to reduce startup memory and disk use) ─────
+embeddings = None
+
+
+def get_embeddings() -> HuggingFaceEmbeddings:
+    global embeddings
+    if embeddings is None:
+        model_name = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+        cache_dir = os.getenv("HF_HOME", "/tmp/hf-cache")
+        os.makedirs(cache_dir, exist_ok=True)
+        print(f"Loading embedding model '{model_name}' from {cache_dir}...")
+        embeddings = HuggingFaceEmbeddings(
+            model_name=model_name,
+            model_kwargs={"device": "cpu"},
+            encode_kwargs={"normalize_embeddings": True},
+            cache_folder=cache_dir,
+        )
+        print("Embedding model loaded.")
+    return embeddings
 
 
 # ── Helper: Extract YouTube Video ID ──────────────────────────────────────────
@@ -164,7 +175,7 @@ def build_vector_store(transcript: str) -> tuple[FAISS, int, int]:
 
     vector_store = FAISS.from_texts(
         texts=chunks,
-        embedding=embeddings,
+        embedding=get_embeddings(),
     )
 
     return vector_store, len(chunks), len(transcript.split())
