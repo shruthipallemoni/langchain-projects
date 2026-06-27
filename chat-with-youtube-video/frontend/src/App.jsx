@@ -23,6 +23,7 @@ import VideoInfo from "./components/VideoInfo";
 import "./App.css";
 
 function App() {
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "https://langchain-projects-a7ge.onrender.com";
 
   // The YouTube URL the user typed
   const [url, setUrl] = useState("");
@@ -78,7 +79,7 @@ function App() {
         This takes 5-15 seconds depending on video length.
         After this, the frontend only needs to remember the video_id.
       */
-      const response = await fetch("http://localhost:8000/api/load-video", {
+      const response = await fetch(`${API_BASE_URL}/api/load-video`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url.trim() }),
@@ -142,7 +143,7 @@ function App() {
         This is the RAG magic: instead of reading 10,000 words,
         the LLM reads ~2,000 characters of the most relevant parts.
       */
-      const response = await fetch("http://localhost:8000/api/ask", {
+      const response = await fetch(`${API_BASE_URL}/api/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
